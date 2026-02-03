@@ -7,10 +7,13 @@ import {
     ChartBarIcon,
     UserIcon,
     PencilSquareIcon,
-    SparklesIcon
+    SparklesIcon,
+    ArrowRightOnRectangleIcon
 } from '@heroicons/react/24/outline'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../../contexts/AuthContext'
 import clsx from 'clsx'
+import { toast } from 'react-hot-toast'
 
 const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
@@ -23,6 +26,21 @@ const navigation = [
 export default function Layout({ children }) {
     const [sidebarOpen, setSidebarOpen] = useState(false)
     const location = useLocation()
+    const navigate = useNavigate()
+    const { currentUser, logout } = useAuth()
+
+    const handleLogout = async () => {
+        try {
+            await logout()
+            navigate('/login')
+            toast.success('Logged out successfully')
+        } catch {
+            toast.error('Failed to log out')
+        }
+    }
+
+    const userInitial = currentUser?.email?.[0]?.toUpperCase() || 'U'
+    const userDisplay = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'User'
 
     return (
         <>
@@ -68,7 +86,7 @@ export default function Layout({ children }) {
                                             </button>
                                         </div>
                                     </Transition.Child>
-                                    {/* Sidebar component, swap this element with another sidebar if you like */}
+
                                     <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-slate-900 px-6 pb-4 ring-1 ring-white/10">
                                         <div className="flex h-16 shrink-0 items-center">
                                             <img
@@ -99,6 +117,15 @@ export default function Layout({ children }) {
                                                             </li>
                                                         ))}
                                                     </ul>
+                                                </li>
+                                                <li className="mt-auto">
+                                                    <button
+                                                        onClick={handleLogout}
+                                                        className="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-slate-400 hover:bg-slate-800 hover:text-white w-full"
+                                                    >
+                                                        <ArrowRightOnRectangleIcon className="h-6 w-6 shrink-0" aria-hidden="true" />
+                                                        Log out
+                                                    </button>
                                                 </li>
                                             </ul>
                                         </nav>
@@ -142,6 +169,15 @@ export default function Layout({ children }) {
                                         ))}
                                     </ul>
                                 </li>
+                                <li className="mt-auto">
+                                    <button
+                                        onClick={handleLogout}
+                                        className="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-slate-400 hover:bg-slate-800 hover:text-white w-full transition-colors"
+                                    >
+                                        <ArrowRightOnRectangleIcon className="h-6 w-6 shrink-0" aria-hidden="true" />
+                                        Log out
+                                    </button>
+                                </li>
                             </ul>
                         </nav>
                     </div>
@@ -164,17 +200,22 @@ export default function Layout({ children }) {
                         <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
                             <div className="flex flex-1 items-center">
                                 <h1 className="text-2xl font-semibold text-slate-900 capitalize">
-                                    {location.pathname.replace('/', '').replace('-', ' ') || 'Dashboard'}
+                                    {location.pathname === '/log-mood' ? 'Log Mood' : location.pathname.replace('/', '').replace('-', ' ') || 'Dashboard'}
                                 </h1>
                             </div>
                             <div className="flex items-center gap-x-4 lg:gap-x-6">
 
-                                {/* Profile dropdown can go here */}
+                                {/* Profile dropdown */}
                                 <div className="relative">
-                                    <div className="flex items-center gap-2 cursor-pointer">
-                                        <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
-                                            A
+                                    <div className="flex items-center gap-2 cursor-pointer p-1 rounded-full hover:bg-slate-50 transition-colors">
+                                        <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold border border-blue-200">
+                                            {userInitial}
                                         </div>
+                                        <span className="hidden lg:flex lg:items-center">
+                                            <span className="text-sm font-semibold leading-6 text-slate-900" aria-hidden="true">
+                                                {userDisplay}
+                                            </span>
+                                        </span>
                                     </div>
                                 </div>
                             </div>

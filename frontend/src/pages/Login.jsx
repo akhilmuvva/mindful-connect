@@ -1,17 +1,45 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { useAuth } from '../contexts/AuthContext'
+import { toast } from 'react-hot-toast'
 
 export default function Login() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [isLogin, setIsLogin] = useState(true)
+    const [loading, setLoading] = useState(false)
+
+    const { login, signup, loginWithGoogle } = useAuth()
     const navigate = useNavigate()
 
-    const handleLogin = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault()
-        // TODO: Implement actual login logic
-        console.log("Logging in with", email, password)
-        navigate('/dashboard')
+        setLoading(true)
+        try {
+            if (isLogin) {
+                await login(email, password)
+            } else {
+                await signup(email, password)
+            }
+            navigate('/dashboard')
+        } catch (error) {
+            // Error is handled in context
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleGoogleLogin = async () => {
+        setLoading(true)
+        try {
+            await loginWithGoogle()
+            navigate('/dashboard')
+        } catch (error) {
+            // Error is handled in context
+        } finally {
+            setLoading(false)
+        }
     }
 
     return (
@@ -29,7 +57,7 @@ export default function Login() {
                         alt="Mindful Connect"
                     />
                     <h2 className="mt-6 text-3xl font-bold text-slate-900">
-                        Mindful Connect
+                        {isLogin ? 'Welcome back' : 'Create account'}
                     </h2>
                     <p className="mt-2 text-sm text-slate-600">
                         Your AI Wellness Companion
@@ -42,7 +70,7 @@ export default function Login() {
                     transition={{ delay: 0.2, duration: 0.5 }}
                     className="bg-white py-8 px-4 shadow-xl rounded-2xl sm:px-10 border border-slate-100"
                 >
-                    <form className="space-y-6" onSubmit={handleLogin}>
+                    <form className="space-y-6" onSubmit={handleSubmit}>
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-slate-700">
                                 Email address
@@ -56,7 +84,7 @@ export default function Login() {
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    className="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all"
                                 />
                             </div>
                         </div>
@@ -70,11 +98,11 @@ export default function Login() {
                                     id="password"
                                     name="password"
                                     type="password"
-                                    autoComplete="current-password"
+                                    autoComplete={isLogin ? "current-password" : "new-password"}
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    className="appearance-none block w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition-all"
                                 />
                             </div>
                         </div>
@@ -82,9 +110,10 @@ export default function Login() {
                         <div>
                             <button
                                 type="submit"
-                                className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                                disabled={loading}
+                                className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:opacity-50"
                             >
-                                Sign in
+                                {loading ? 'Processing...' : (isLogin ? 'Sign in' : 'Sign up')}
                             </button>
                         </div>
 
@@ -101,11 +130,23 @@ export default function Login() {
 
                         <button
                             type="button"
-                            className="w-full flex justify-center py-2.5 px-4 border border-slate-300 rounded-lg shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-colors"
+                            onClick={handleGoogleLogin}
+                            disabled={loading}
+                            className="w-full flex justify-center py-2.5 px-4 border border-slate-300 rounded-lg shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 transition-all disabled:opacity-50"
                         >
-                            Sign up
+                            Sign in with Google
                         </button>
                     </form>
+
+                    <div className="mt-6 text-center">
+                        <button
+                            type="button"
+                            onClick={() => setIsLogin(!isLogin)}
+                            className="text-sm font-medium text-blue-600 hover:text-blue-500"
+                        >
+                            {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
+                        </button>
+                    </div>
                 </motion.div>
             </div>
         </div>
